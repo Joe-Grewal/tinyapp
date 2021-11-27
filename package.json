@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Joe-Grewal/tinyapp/issues"
   },
-  "homepage": "https://github.com/Joe-Grewal/tinyapp#readme"
+  "homepage": "https://github.com/Joe-Grewal/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
