@@ -19,6 +19,14 @@ function generateRandomString() {
  return result;
 };
 
+const checkByEmail = (email, registry) => {
+  for (const userId in registry) {
+    if (registry[userId].email === email) {
+      return registry[userId];
+    }
+  } return false;
+};
+
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -52,27 +60,45 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-app.get("/urls/register", (req, res) => {
+app.get("/register", (req, res) => {
   const user_id = users[req.cookies["user_id"]];
   const templateVars = { user_id, urls: urlDatabase };
-  res.render("urls_register", templateVars);
+  res.render("register", templateVars);
 });
 
-app.post("/urls/register", (req, res) => {
+app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  users[id] = { id, email, password };
-  res.cookie('user_id', users[id]['id']);
-  res.redirect("/urls");
+  if (!email || !password) {
+    res.status(400).send('Status code 400: empty fields detected');
+  } else if (checkByEmail(email, users)) {
+    res.status(400).send('Status code 400: e-mail already exists');
+  } else {
+    users[id] = { id, email, password };
+    res.cookie('user_id', users[id]['id']);
+    res.redirect("/urls");
+  }
+});
+
+app.get("/login", (req, res) => {
+  const user_id = users[req.cookies["user_id"]];
+  const templateVars = { user_id, urls: urlDatabase };
+  res.render("login", templateVars);
 });
 
 app.post("/login", (req, res) => {
-  const user_id = users[req.cookies["user_id"]];
-  if (!user_id) {
-    return res.redirect("/urls/register");
-  } else {
-    res.cookie("user_id", user_id)
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
+    res.status(400).send('Status code 400: empty fields detected');
+  } else if (!checkByEmail(email, users)) {
+    res.status(403).send('Status code 403: email not found');
+  } else if (checkByEmail(email, users) && checkByEmail(email, users).password !== password) {
+    res.status(403).send('Status code 403: incorrect password');
+  } else if (checkByEmail(email, users) && checkByEmail(email, users).password === password) {
+    const user_id = checkByEmail(email, users);
+    res.cookie('user_id', user_id['id']);
     res.redirect("/urls");
   }
 });
