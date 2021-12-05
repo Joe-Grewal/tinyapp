@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(cookieParser())
@@ -79,12 +80,13 @@ app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   if (!email || !password) {
     res.status(400).send('Status code 400: empty fields detected');
   } else if (checkByEmail(email, users)) {
     res.status(400).send('Status code 400: e-mail already exists');
   } else {
-    users[id] = { id, email, password };
+    users[id] = { id, email, hashedPassword };
     res.cookie('user_id', users[id]['id']);
     res.redirect("/urls");
   }
@@ -99,14 +101,15 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  console.log(password);
+  const user_id = checkByEmail(email, users);
   if (!email || !password) {
     res.status(400).send('Status code 400: empty fields detected');
-  } else if (!checkByEmail(email, users)) {
+  } else if (!user_id) {
     res.status(403).send('Status code 403: email not found');
-  } else if (checkByEmail(email, users) && checkByEmail(email, users).password !== password) {
+  } else if (!bcrypt.compareSync(password, user_id.hashedPassword)) {
     res.status(403).send('Status code 403: incorrect password');
-  } else if (checkByEmail(email, users) && checkByEmail(email, users).password === password) {
-    const user_id = checkByEmail(email, users);
+  } else {
     res.cookie('user_id', user_id['id']);
     res.redirect("/urls");
   }
