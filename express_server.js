@@ -1,44 +1,18 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 const app = express();
 app.use(cookieSession({
   name: 'session',
   secret: 'JoeGrewal' 
 }));
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-
-function generateRandomString() {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const length = characters.length;
-  for (let i = 0; i < 6; i++ ) {
-    result += characters.charAt(Math.floor(Math.random() * length));
- }
- return result;
-};
-
-const urlsForUser = (id, database) => {
-  const userUrls = {};
-  for (const key in database) {
-    if (database[key].userID === id) {
-      userUrls[key] = database[key];
-    }
-  } return userUrls;
-};
-
-const getUserByEmail = (email, database) => {
-  for (const userId in database) {
-    if (database[userId].email === email) {
-      return database[userId];
-    }
-  } return false;
-};
 
 const users = { 
   "userRandomID": {
@@ -104,7 +78,6 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  console.log(password);
   const user_id = getUserByEmail(email, users);
   if (!email || !password) {
     res.status(400).send('Status code 400: empty fields detected');
@@ -113,7 +86,6 @@ app.post("/login", (req, res) => {
   } else if (!bcrypt.compareSync(password, user_id.hashedPassword)) {
     res.status(403).send('Status code 403: incorrect password');
   } else {
-    console.log(user_id.hashedPassword);
     req.session.user_id = user_id['id'];
     res.redirect("/urls");
   }
@@ -126,7 +98,6 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const user_id = users[req.session.user_id];
-  console.log(req.body.longURL);  // Log the POST request body to the console
   if (!req.body.longURL) {
     res.status(400).send('Status code 400: empty field detected');
   } else {
