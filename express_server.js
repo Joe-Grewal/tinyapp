@@ -27,6 +27,9 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "userRandomID" }
 };
 
+//==============================
+// Requests
+//==============================
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -41,15 +44,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls/new", (req, res) => {
-  const user_id = users[req.session.user_id];
-  const templateVars = { user_id, urls: urlDatabase };
-  res.render("urls_new", templateVars);
-});
-
+// Registration
 app.get("/register", (req, res) => {
   const user_id = users[req.session.user_id];
-  const templateVars = { user_id, urls: urlDatabase };
+  const templateVars = { user_id };
   res.render("register", templateVars);
 });
 
@@ -69,6 +67,7 @@ app.post("/register", (req, res) => {
   }
 });
 
+// Login
 app.get("/login", (req, res) => {
   const user_id = users[req.session.user_id];
   const templateVars = { user_id, urls: urlDatabase };
@@ -94,6 +93,13 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
+});
+
+// Creating/Editing Urls
+app.get("/urls/new", (req, res) => {
+  const user_id = users[req.session.user_id];
+  const templateVars = { user_id };
+  res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -135,10 +141,6 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const longAddress = urlDatabase[req.params.shortURL]['longURL'];
   res.redirect(longAddress);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
